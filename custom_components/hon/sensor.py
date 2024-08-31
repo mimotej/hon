@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from . import const
 from .const import DOMAIN
@@ -808,7 +808,7 @@ SENSORS["WD"] = unique_entities(SENSORS["WM"], SENSORS["TD"])
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     entities = []
     entity: HonSensorEntity | HonConfigSensorEntity
@@ -846,7 +846,7 @@ class HonSensorEntity(HonEntity, SensorEntity):
             self._attr_native_value = 0
         self._attr_native_value = value
         if update:
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
 
 class HonConfigSensorEntity(HonEntity, SensorEntity):
@@ -874,4 +874,4 @@ class HonConfigSensorEntity(HonEntity, SensorEntity):
             value = get_readable(self.entity_description, value)
         self._attr_native_value = value
         if update:
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()

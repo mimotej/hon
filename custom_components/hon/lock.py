@@ -5,7 +5,7 @@ from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from pyhon.parameter.base import HonParameter
 from pyhon.parameter.range import HonParameterRange
 
@@ -26,7 +26,7 @@ LOCKS: dict[str, tuple[LockEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     entities = []
     for device in hass.data[DOMAIN][entry.unique_id]["hon"].appliances:
@@ -56,7 +56,7 @@ class HonLockEntity(HonEntity, LockEntity):
         if type(setting) == HonParameter or setting is None:
             return
         setting.value = setting.max if isinstance(setting, HonParameterRange) else 1
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state()
         await self._device.commands["settings"].send()
         self.coordinator.async_set_updated_data({})
 
@@ -66,7 +66,7 @@ class HonLockEntity(HonEntity, LockEntity):
         if type(setting) == HonParameter:
             return
         setting.value = setting.min if isinstance(setting, HonParameterRange) else 0
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state()
         await self._device.commands["settings"].send()
         self.coordinator.async_set_updated_data({})
 
@@ -83,4 +83,4 @@ class HonLockEntity(HonEntity, LockEntity):
     def _handle_coordinator_update(self, update: bool = True) -> None:
         self._attr_is_locked = self.is_locked
         if update:
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
