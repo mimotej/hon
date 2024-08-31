@@ -10,7 +10,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -36,7 +36,7 @@ FANS: dict[str, tuple[FanEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     entities = []
     for device in hass.data[DOMAIN][entry.unique_id]["hon"].appliances:
@@ -56,7 +56,7 @@ class HonFanEntity(HonEntity, FanEntity):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
+        hass: HomeAssistant,
         entry: ConfigEntry,
         device: HonAppliance,
         description: FanEntityDescription,
@@ -85,7 +85,7 @@ class HonFanEntity(HonEntity, FanEntity):
         mode = math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
         self._device.settings[self.entity_description.key].value = mode
         await self._device.commands[self._command].send()
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state()
 
     @property
     def is_on(self) -> bool | None:
@@ -112,7 +112,7 @@ class HonFanEntity(HonEntity, FanEntity):
         """Turn the entity off."""
         self._device.settings[self.entity_description.key].value = 0
         await self._device.commands[self._command].send()
-        self.async_write_ha_state()
+        self.async_schedule_update_ha_state()
 
     @callback
     def _handle_coordinator_update(self, update: bool = True) -> None:
@@ -125,7 +125,7 @@ class HonFanEntity(HonEntity, FanEntity):
             )
             self._attr_percentage = self.percentage
         if update:
-            self.async_write_ha_state()
+            self.async_schedule_update_ha_state()
 
     @property
     def available(self) -> bool:
